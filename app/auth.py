@@ -1,8 +1,8 @@
-from flask import Blueprint, render_template, redirect, request, url_for, flash
+#app/auth.py
+from flask import Blueprint, render_template, redirect, request, url_for, flash, current_app
 from flask_login import login_user, logout_user, login_required
 from werkzeug.security import generate_password_hash, check_password_hash
-from app import db
-from app.models import User
+
 
 # 認証関連のルーティング用のBlueprintを作成
 auth = Blueprint('auth', __name__)
@@ -37,16 +37,17 @@ def signup_post():
     username = request.form.get('username')
     password = request.form.get('password')
 
+    User = current_app.models.User
     user = User.query.filter_by(email=email).first()
 
     if user:  # 既に同じメールアドレスでユーザーが存在する場合
         flash('このメールアドレスは既に使用されています。')
-        return redirect(url_for('auth.signup'))
+        return redirect(url_for('auth.signup'))   
 
     new_user = User(email=email, username=username, password_hash=generate_password_hash(password, method='sha256'))
 
-    db.session.add(new_user)
-    db.session.commit()
+    current_app.db.session.add(new_user)
+    current_app.db.session.commit()
 
     return redirect(url_for('auth.login'))
 

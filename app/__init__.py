@@ -6,33 +6,38 @@ from flask_login import LoginManager
 from celery import Celery
 from config import Config
 
-# アプリケーションインスタンスの作成
-app = Flask(__name__)
-
-# config.pyのConfigクラスから設定を読み込む
-app.config.from_object(Config)
-
-# データベースインスタンスの作成
-db = SQLAlchemy(app)
-
-# メールインスタンスの作成
-mail = Mail(app)
-
-# ログイン管理インスタンスの作成
+db = SQLAlchemy()
+mail = Mail()
 login_manager = LoginManager()
-login_manager.login_view = 'auth.login'
-login_manager.init_app(app)
 
-# Celeryインスタンスの作成
-celery = Celery(app.name, broker=app.config['CELERY_BROKER_URL'])
-celery.conf.update(app.config)
+def create_app():
+    app = Flask(__name__)
+    app.config.from_object(Config)
 
-# Blueprintの登録
-from app.main import main as main_blueprint
-app.register_blueprint(main_blueprint)
+    db.init_app(app)
+    mail.init_app(app)
 
-from app.auth import auth as auth_blueprint
-app.register_blueprint(auth_blueprint, url_prefix='/auth')
+    from app.auth import auth as auth_blueprint
+    from app.main import main as main_blueprint
+    app.register_blueprint(auth_blueprint, url_prefix='/auth')
+    app.register_blueprint(main_blueprint)
 
-# モデルのインポート
-from app import models
+    # ログイン管理インスタンスの作成
+    login_manager = LoginManager()
+    login_manager.login_view = 'auth.login'
+    login_manager.init_app(app)
+
+
+    # Userモデルのインポートはここで行います
+    # 循環インポートを避けるため、ここでのインポートが必要
+    from app.models import User
+
+    # user_loaderコールバックの設定
+    @login_manager.user_loader
+    def load_user(user_id):
+        return User.query.get(int(user_id))
+
+    return app
+
+if __name__ == '__main__':
+    app.run(debug=True)

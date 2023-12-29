@@ -3,6 +3,15 @@ from flask import Blueprint, render_template
 
 main = Blueprint('main', __name__)
 
-@main.route('/profile')
+@main.route('/')
+def index():
+    return render_template('index.html')
+
+# app/auth.py
+from flask import Blueprint, render_template
+
+user = Blueprint('user', __name__)
+
+@user.route('/profile')
 def profile():
-    return render_template('profile.html')  # profile.html テンプレートを用意する必要がある
+    return render_template('profile.html')
