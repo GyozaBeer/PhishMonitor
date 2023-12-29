@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>キーワードと日付の入力</title>
+    <link rel="stylesheet" href="styles/main.css"> <!-- スタイルシートへのリンクが必要になるかもしれません -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+</head>
+<body>
+
+    <!-- 認証ページへのリンクを追加 -->
+    <p>サービスを使用する前に<a href="/login">ログイン</a>してください。</p>
+
+    <!-- 検索フォーム -->
+    <form id="searchForm">
+        <div>
+            <label for="keyword">キーワード:</label>
+            <input type="text" id="keyword" name="keyword" required>
+        </div>
+        <div>
+            <label for="date">日付:</label>
+            <input type="date" id="date" name="date" required>
+        </div>
+        <div>
+            <input type="submit" value="検索">
+        </div>
+    </form>
+    
+    <div id="results"></div>
+    <div id="loading" style="display: none;">処理中...</div>
+
+    <script>
+    $(document).ready(function() {
+        $('#searchForm').on('submit', function(e) {
+            e.preventDefault();
+            $('#results').empty();
+            $('#loading').show();
+
+            var keyword = $('#keyword').val();
+            var date = $('#date').val();
+            
+            checkFileStatusAndSearch(keyword, date);
+        });
+    });
+
+    function checkFileStatusAndSearch(keyword, date) {
+        // ファイルの状態をサーバーに問い合わせるロジック
+        // ここにバックエンドのURLを指定します
+        // 例えば、バックエンドが '/api/check-file-status' のエンドポイントを提供していると仮定します
+    }
+
+    function searchKeywords(keyword, date) {
+        // キーワードと日付を使用して検索を行うロジック
+        // ここにバックエンドのURLを指定します
+        // 例えば、バックエンドが '/api/search' のエンドポイントを提供していると仮定します
+    }
+    </script>
+</body>
+</html>
