@@ -1,6 +1,7 @@
 #app/models.py
 from app import db
 from datetime import datetime
+from flask_login import UserMixin
 
 # 中間テーブルの定義
 user_nrd = db.Table('user_nrd',
@@ -8,7 +9,7 @@ user_nrd = db.Table('user_nrd',
     db.Column('nrd_id', db.Integer, db.ForeignKey('nrd.id'), primary_key=True)
 )
 
-class User(db.Model):
+class User(UserMixin,db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)

@@ -10,8 +10,6 @@ def index():
 # app/auth.py
 from flask import Blueprint, render_template
 
-user = Blueprint('user', __name__)
-
-@user.route('/profile')
+@main.route('/profile')
 def profile():
     return render_template('profile.html')
