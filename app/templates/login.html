@@ -4,6 +4,18 @@
 <div class="column is-4 is-offset-4">
     <h3 class="title">Login</h3>
     <div class="box">
+
+        <!-- フラッシュメッセージの表示 -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="notification {{ 'is-success' if category == 'success' else 'is-danger' }}">
+                    {{ message|safe }}
+                </div>
+            {% endfor %}
+        {% endif %}
+        {% endwith %}
+
         <form method="POST" action="/auth/login">
             <div class="field">
                 <div class="control">
@@ -18,7 +30,7 @@
             </div>
             <div class="field">
                 <label class="checkbox">
-                    <input type="checkbox">
+                    <input type="checkbox" name="remember">
                     Remember me
                 </label>
             </div>

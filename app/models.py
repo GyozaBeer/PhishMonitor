@@ -1,5 +1,5 @@
 #app/models.py
-from app import db
+from app.database import db
 from datetime import datetime
 from flask_login import UserMixin
 
@@ -11,9 +11,10 @@ user_nrd = db.Table('user_nrd',
 
 class User(UserMixin,db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(80), unique=True, nullable=False)
-    email = db.Column(db.String(120), unique=True, nullable=False)
+    username = db.Column(db.String(80), nullable=False)
+    email = db.Column(db.String(120), nullable=False)
     password_hash = db.Column(db.String(128))
+    is_admin = db.Column(db.Boolean, default=False)
     # その他のユーザー関連フィールド
 
     # 多対多リレーションシップ
@@ -25,7 +26,7 @@ class User(UserMixin,db.Model):
 
 class NRD(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    domain_name = db.Column(db.String(255), unique=True, nullable=False)
+    domain_name = db.Column(db.String(255), nullable=False)
     registration_date = db.Column(db.DateTime, default=datetime.utcnow)
     # その他のNRD関連フィールド
 

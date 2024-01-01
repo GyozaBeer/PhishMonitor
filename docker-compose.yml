@@ -1,0 +1,15 @@
+version: '3.8'
+services:
+  phishmonitor:
+    build: .
+    ports:
+      - "5000:5000"
+    depends_on:
+      - redis
+    volumes:
+      - .:/app  # ローカルのappディレクトリをコンテナの/appディレクトリにマウント
+
+  redis:
+    image: redis
+    ports:
+      - "6379:6379"

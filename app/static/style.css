@@ -1,0 +1,9 @@
+/* static/style.css */
+.navbar-menu .navbar-item.is-active {
+    background-color: #b3e5fc; /* 薄い水色 */
+    color: #333; /* テキストの色 */
+}
+
+.navbar-menu .navbar-item:hover {
+    background-color: #b3e5fc; /* マウスオーバー時の背景色 */
+}

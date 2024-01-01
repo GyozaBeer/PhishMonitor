@@ -1,38 +1,28 @@
+<!-- base.html -->
 <!DOCTYPE html>
 <html>
-
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Flask Auth Example</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.2/css/bulma.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.2/css/bulma.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    
 </head>
 
 <body>
     <section class="hero is-primary is-fullheight">
-
         <div class="hero-head">
             <nav class="navbar">
                 <div class="container">
-
                     <div id="navbarMenuHeroA" class="navbar-menu">
                         <div class="navbar-end">
-                            <a href="{{ url_for('main.index') }}" class="navbar-item">
-                                Home
-                            </a>
-                            <a href="{{ url_for('main.profile') }}" class="navbar-item">
-                                Profile
-                            </a>
-                            <a href="{{ url_for('auth.login') }}" class="navbar-item">
-                                Login
-                            </a>
-                            <a href="{{ url_for('auth.signup') }}" class="navbar-item">
-                                Sign Up
-                            </a>
-                            <a href="{{ url_for('auth.logout') }}" class="navbar-item">
-                                Logout
-                            </a>
+                            <a href="{{ url_for('main.index') }}" class="navbar-item {{ 'is-active' if request.endpoint == 'main.index' else '' }}">Home</a>
+                            <a href="{{ url_for('main.profile') }}" class="navbar-item {{ 'is-active' if request.endpoint == 'main.profile' else '' }}">Profile</a>
+                            <a href="{{ url_for('auth.login') }}" class="navbar-item {{ 'is-active' if request.endpoint == 'auth.login' else '' }}">Login</a>
+                            <a href="{{ url_for('auth.signup') }}" class="navbar-item {{ 'is-active' if request.endpoint == 'auth.signup' else '' }}">Sign Up</a>
+                            <a href="{{ url_for('auth.logout') }}" class="navbar-item {{ 'is-active' if request.endpoint == 'auth.logout' else '' }}" onclick="return confirmLogout()">Logout</a>
                         </div>
                     </div>
                 </div>
@@ -41,11 +31,12 @@
 
         <div class="hero-body">
             <div class="container has-text-centered">
-               {% block content %}
-               {% endblock %}
+                {% block content %}
+                {% endblock %}
             </div>
         </div>
     </section>
-</body>
 
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
 </html>
