@@ -18,7 +18,16 @@ def index():
         return redirect(url_for('main.dashboard'))
 
     # ログインしていない場合、通常通りindex.htmlを表示
-    return render_template('index.html', nrds=[], searched=False)
+    keyword = request.args.get('keyword', 'example.co.jp')  # デフォルトキーワードを設定
+    filtered_keyword = filter_keyword(keyword)
+    nrds = []
+
+    if filtered_keyword:
+        # フィルタリングされたキーワードで検索
+        nrds = NRD.query.filter(NRD.domain_name.contains(filtered_keyword)).limit(10).all()
+
+    app.logger.info("index.html requested with keyword: {}".format(filtered_keyword))
+    return render_template('index.html', nrds=nrds, keyword=keyword)
 
 @main.route('/download_nrd', methods=['POST'])
 @login_required
@@ -52,18 +61,17 @@ def store_db():
 def profile():
     return render_template('profile.html', name=current_user.username)
 
-@main.route('/search_results')
+@main.route('/search_results', methods=['GET'])
 def search_results():
-    keyword = request.args.get('keyword')  # GETリクエストからキーワードを取得
-    searched = False
-    nrds = []
-
-    if keyword:
-        searched = True
-        # 検索結果を10件に制限
-        nrds = NRD.query.filter(NRD.domain_name.contains(keyword)).limit(10).all()
-
-    return render_template('index.html', nrds=nrds, searched=searched)
+    raw_keyword = request.args.get('keyword', '')
+    filtered_keyword = filter_keyword(raw_keyword)
+    if filtered_keyword:
+        # フィルタリングされたキーワードで検索
+        nrds = NRD.query.filter(NRD.domain_name.contains(filtered_keyword)).all()
+    else:
+        # キーワードが不適切な場合（または何も入力されていない場合）
+        nrds = []
+    return render_template('index.html', nrds=nrds)
 
 @main.route('/dashboard')
 @main.route('/dashboard/<active_tab>', methods=['GET', 'POST'])
@@ -86,6 +94,8 @@ def dashboard(active_tab='monitor'):
         else:
             keyword = session.get('last_search_keyword', '')
         
+
+        # 検索するタイミングでkeywordにフィルターをかける
         search_results = NRD.query.filter(NRD.domain_name.contains(keyword)).limit(10).all() if keyword else []
         watched_nrd_ids = [nrd.id for nrd in current_user.nrds]
     else:
@@ -134,4 +144,13 @@ def remove_from_watchlist():
     else:
         flash('NRDが見つかりませんでした。', 'error')
     return redirect(url_for('main.dashboard', active_tab=active_tab, keyword=request.form.get('keyword')))
+
+def filter_keyword(keyword):
+    excluded_keywords = {'www', 'co', 'jp', 'com', 'net', 'org'}  # 除外するキーワード
+    segments = keyword.split('.')
+    # 右側から最初に一致しないセグメントを探す
+    for seg in reversed(segments):
+        if seg not in excluded_keywords:
+            return seg
+    return None  # 何も見つからない場合はNoneを返す
 

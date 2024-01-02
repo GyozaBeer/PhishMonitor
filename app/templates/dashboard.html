@@ -28,14 +28,16 @@
                 <table class="table is-fullwidth">
                     <thead>
                         <tr>
-                            <th>NRD名称</th>
-                            <th>NRD登録日</th>
+                            <th>#</th>
+                            <th>ドメイン</th>
+                            <th>WHOIS登録日</th>
                             <th>操作</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for nrd in monitored_nrds %}
                         <tr>
+                            <td>{{ loop.index }}</td>
                             <td>{{ nrd.domain_name }}</td>
                             <td>{{ nrd.registration_date }}</td>
                             <td>
@@ -82,14 +84,16 @@
                         <table class="table is-fullwidth">
                             <thead>
                                 <tr>
-                                    <th>NRD名称</th>
-                                    <th>NRD登録日</th>
+                                    <th>#</th>
+                                    <th>ドメイン</th>
+                                    <th>WHOIS登録日</th>
                                     <th>操作</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for nrd in search_results %}
                                 <tr>
+                                    <td>{{ loop.index }}</td>
                                     <td>{{ nrd.domain_name }}</td>
                                     <td>{{ nrd.registration_date }}</td>
                                     <td>

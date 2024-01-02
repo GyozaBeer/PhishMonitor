@@ -4,40 +4,67 @@
 <section class="section">
     <div class="container">
         <div class="columns is-centered">
-            <div class="column is-8-tablet is-6-desktop is-4-widescreen is-3-fullhd">
-                <!-- 検索フォーム -->
-                <form action="{{ url_for('main.search_results') }}" method="get" class="field has-addons has-addons-centered">
-                    <p class="control">
-                        <input class="input" type="text" id="keyword" name="keyword" placeholder="キーワードを入力" required>
-                    </p>
-                    <p class="control">
-                        <button class="button is-info" type="submit">検索</button>
-                    </p>
-                </form>
+            <div class="column is-fullwidth">
 
+                <!-- ロゴ部分 -->
+                <div class="phishmonitor-logo">
+                    <h1 class="title">Phish Monitor</h1>
+                </div>
+                
+                <div>
+                    <p>フィッシングサイトの可能性があるドメインを一覧化し、死活監視します</p>
+                </div>
+
+                <div style="margin-top: 20px;">
+                    <!-- 検索フォーム -->
+                    <form action="{{ url_for('main.index') }}" method="get" class="field has-addons has-addons-centered">
+                        <p class="control">
+                            <input class="input" type="text" id="keyword" name="keyword" placeholder="example.co.jp" required>
+                        </p>
+                        <p class="control">
+                            <button class="button is-info" type="submit">検索</button>
+                        </p>
+                    </form>
+                </div>
+
+                <!-- index.html内の検索フォームの下に追加 -->
+
+                <h2 class="subtitle">「{{ keyword }}」の検索結果</h2>
+                <table class="table is-fullwidth">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>ドメイン</th>
+                            <th>WHOIS登録日</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for nrd in nrds %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td>{{ nrd.domain_name }}</td>
+                        <td>{{ nrd.registration_date }}</td>
+                        <td>
+                            <form action="{{ url_for('main.add_to_watchlist') }}" method="post">
+                                <input type="hidden" name="nrd_id" value="{{ nrd.id }}">
+                                <input type="hidden" name="keyword" value="{{ request.args.get('keyword', '') }}">
+                                <button type="submit" class="button is-small is-primary">監視対象追加</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+
+                <!-- 管理者用ボタン -->
                 {% if current_user.is_authenticated and current_user.is_admin %}
-                    <!-- NRDダウンロードボタン -->
                     <button id="downloadNrd" class="button is-primary">NRDダウンロード</button>
-
-                    <!-- DB格納ボタン -->
                     <button id="storeDb" class="button is-primary">DB格納</button>
                 {% endif %}
 
-                <div id="results"></div>
-                <div id="loading" style="display: none;">処理中...</div>
-
-                <!-- NRDデータのリスト -->
-                {% if searched %}
-                    <h1 class="title">NRDデータ!!</h1>
-                    <ul>
-                        {% for nrd in nrds %}
-                            <li>{{ nrd.domain_name }} - {{ nrd.registration_date }}</li>
-                        {% endfor %}
-                    </ul>
-                {% endif %}
-                <!-- 認証ページへのリンク -->
-                <p style="white-space: nowrap;">サービスを使用する前に<a href="/auth/login">ログイン</a>してください。</p>
-
+                <!-- ログインリンク -->
+                <p>監視対象に追加する際は<a href="/auth/login">ログイン</a>してください。</p>
             </div>
         </div>
     </div>

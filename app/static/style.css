@@ -12,3 +12,11 @@
     margin-top: 20px;
     margin-bottom: 20px;
 }
+
+.phishmonitor-logo .title {
+    font-family: 'Arial', sans-serif; /* お好みのフォントに変更 */
+    color: #007BFF; /* お好みのカラーに変更 */
+    font-size: 2.5rem; /* サイズ調整 */
+    text-align: center; /* 中央揃え */
+    margin-bottom: 20px; /* 下部の余白 */
+}
