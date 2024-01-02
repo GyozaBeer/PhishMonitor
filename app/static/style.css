@@ -7,3 +7,8 @@
 .navbar-menu .navbar-item:hover {
     background-color: #b3e5fc; /* マウスオーバー時の背景色 */
 }
+
+.custom-margin {
+    margin-top: 20px;
+    margin-bottom: 20px;
+}

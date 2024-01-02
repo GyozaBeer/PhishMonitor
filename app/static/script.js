@@ -53,3 +53,22 @@ function storeNRDInDB() {
 function confirmLogout() {
     return confirm("ログアウトしますか？");
 }
+
+function addToWatchlist(nrdId) {
+    $.ajax({
+        url: "{{ url_for('main.add_to_watchlist_ajax') }}",
+        type: 'POST',
+        data: { nrd_id: nrdId },
+        dataType: 'json',
+        success: function(response) {
+            if (response.status == 'success') {
+                alert(response.message);  // または他の通知方法
+            } else {
+                alert(response.message);  // エラーメッセージ
+            }
+        },
+        error: function() {
+            alert('通信エラーが発生しました。');
+        }
+    });
+}

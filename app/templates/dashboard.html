@@ -1,1 +1,96 @@
-dashboard
+{% extends "base.html" %}
+
+{% block content %}
+<section class="section">
+    <div class="container">
+        <!-- Flashメッセージ表示領域 -->
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <div class="notification is-info">
+                    {% for message in messages %}
+                        <p>{{ message }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <!-- JavaScript変数の定義 -->
+        <script type="text/javascript">
+            var addToWatchlistUrl = "{{ url_for('main.add_to_watchlist') }}";
+        </script>
+
+        <div class="tabs is-centered is-boxed">
+            <ul>
+                <li class="{{ 'is-active' if active_tab == 'monitor' else '' }}"><a href="{{ url_for('main.dashboard', active_tab='monitor') }}">NRD監視</a></li>
+                <li class="{{ 'is-active' if active_tab == 'search' else '' }}"><a href="{{ url_for('main.dashboard', active_tab='search') }}">NRD検索＆登録</a></li>
+            </ul>
+        </div>
+
+        {% if active_tab == 'monitor' %}
+            <!-- NRD監視機能のコンテンツ -->
+            <div>
+                <h2 class="subtitle">監視リスト</h2>
+                <table class="table is-fullwidth">
+                    <thead>
+                        <tr>
+                            <th>NRD名称</th>
+                            <th>NRD登録日</th>
+                            <!-- その他の列が必要な場合はここに追加 -->
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for nrd in monitored_nrds %}
+                        <tr>
+                            <td>{{ nrd.domain_name }}</td>
+                            <td>{{ nrd.registration_date }}</td>
+                            <!-- その他のデータを表示 -->
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% elif active_tab == 'search' %}
+            <!-- NRD検索＆登録機能のコンテンツ -->
+            <div>
+                <!-- キーワード検索フォーム -->
+                <form action="{{ url_for('main.dashboard', active_tab='search') }}" method="get" class="field has-addons has-addons-centered">
+                    <p class="control">
+                        <input class="input" type="text" id="keyword" name="keyword" placeholder="キーワードでNRD検索" required>
+                    </p>
+                    <p class="control">
+                        <button class="button is-info" type="submit">検索</button>
+                    </p>
+                </form>
+
+                <!-- 検索結果リスト -->
+                <div id="search-results">
+                    {% if search_results %}
+                        <h2 class="subtitle">検索結果</h2>
+                        <table class="table is-fullwidth">
+                            <thead>
+                                <tr>
+                                    <th>NRD名称</th>
+                                    <th>NRD登録日</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for nrd in search_results %}
+                                <tr>
+                                    <td>{{ nrd.domain_name }}</td>
+                                    <td>{{ nrd.registration_date }}</td>
+                                    <td>
+                                        <form action="{{ url_for('main.add_to_watchlist') }}" method="post">
+                                            <input type="hidden" name="nrd_id" value="{{ nrd.id }}">
+                                            <button type="submit" class="button is-small is-primary">監視対象追加</button>                                 </td>                                
+                                </tr>
+                                {% endfor %}                                
+                            </tbody>
+                        </table>
+                    {% endif %}
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

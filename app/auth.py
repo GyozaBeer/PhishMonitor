@@ -29,7 +29,7 @@ def login_post():
         return redirect(url_for('auth.login'))
 
     login_user(user, remember=remember)
-    return redirect(url_for('main.profile'))
+    return redirect(url_for('main.index'))
 
 @auth.route('/signup')
 def signup():
@@ -63,11 +63,3 @@ def logout():
     return redirect(url_for('main.index'))
 
 
-@auth.route('/admin')
-@login_required
-def admin():
-    if current_user.is_admin:
-        return render_template('admin.html')
-    else:
-        flash('アクセス権限がありません。')
-        return redirect(url_for('main.profile'))

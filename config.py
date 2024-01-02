@@ -9,6 +9,7 @@ load_dotenv(os.path.join(basedir, '.env'))
 class Config:
     # Flaskの秘密鍵、セキュリティに関わる重要なキーです
     SECRET_KEY = os.environ.get('SECRET_KEY')
+    FLASK_ENV = os.environ.get('FLASK_ENV')
 
     # データベースの接続設定
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')

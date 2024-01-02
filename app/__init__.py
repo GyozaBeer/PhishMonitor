@@ -5,6 +5,9 @@ from flask_mail import Mail
 from flask_login import LoginManager
 from config import Config
 from app.database import db
+from app.models import User
+from werkzeug.security import generate_password_hash
+
 
 mail = Mail()
 login_manager = LoginManager()
@@ -25,7 +28,7 @@ def create_app():
     login_manager.login_view = 'auth.login'
     login_manager.init_app(app)
 
-    from app.models import User
+    #from app.models import User
     @login_manager.user_loader
     def load_user(user_id):
         return User.query.get(int(user_id))
@@ -35,7 +38,3 @@ def create_app():
     celery = make_celery(app)
 
     return app
-
-if __name__ == '__main__':
-    app = create_app()
-    app.run(debug=True)

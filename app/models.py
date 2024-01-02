@@ -21,6 +21,16 @@ class User(UserMixin,db.Model):
     nrds = db.relationship('NRD', secondary=user_nrd, lazy='subquery',
                            backref=db.backref('users', lazy=True))
 
+    def add_nrd_to_watchlist(self, nrd):
+        if nrd not in self.nrds:
+            self.nrds.append(nrd)
+            db.session.commit()
+
+    def remove_nrd_from_watchlist(self, nrd):
+        if nrd in self.nrds:
+            self.nrds.remove(nrd)
+            db.session.commit()
+
     def __repr__(self):
         return f"<User '{self.username}'>"
 
@@ -28,6 +38,8 @@ class NRD(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     domain_name = db.Column(db.String(255), nullable=False)
     registration_date = db.Column(db.DateTime, default=datetime.utcnow)
+    is_active = db.Column(db.Boolean, default=True)  # 死活状況
+    last_checked = db.Column(db.DateTime)  # 最後にチェックした日時
     # その他のNRD関連フィールド
 
     def __repr__(self):
