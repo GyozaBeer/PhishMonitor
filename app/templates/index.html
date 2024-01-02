@@ -5,9 +5,6 @@
     <div class="container">
         <div class="columns is-centered">
             <div class="column is-8-tablet is-6-desktop is-4-widescreen is-3-fullhd">
-                <!-- 認証ページへのリンク -->
-                <p style="white-space: nowrap;">サービスを使用する前に<a href="/auth/login">ログイン</a>してください。</p>
-
                 <!-- 検索フォーム -->
                 <form action="{{ url_for('main.search_results') }}" method="get" class="field has-addons has-addons-centered">
                     <p class="control">
@@ -38,6 +35,9 @@
                         {% endfor %}
                     </ul>
                 {% endif %}
+                <!-- 認証ページへのリンク -->
+                <p style="white-space: nowrap;">サービスを使用する前に<a href="/auth/login">ログイン</a>してください。</p>
+
             </div>
         </div>
     </div>

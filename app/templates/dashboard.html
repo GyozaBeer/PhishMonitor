@@ -51,13 +51,24 @@
                     </tbody>
                 </table>
             </div>
+            <div>
+                {% if monitored_nrds %}
+                    <!-- none -->
+                {% else %}
+                    <p><a href="{{ url_for('main.dashboard', active_tab='search') }}">NRD検索＆登録</a>してください。</p>
+                {% endif %}
+            </div>
         {% elif active_tab == 'search' %}
             <!-- NRD検索＆登録機能のコンテンツ -->
             <div>
                 <!-- キーワード検索フォーム -->
-                <form action="{{ url_for('main.dashboard', active_tab='search') }}" method="get" class="field has-addons has-addons-centered">
+                <form action="{{ url_for('main.dashboard', active_tab='search') }}" method="post" class="field has-addons has-addons-centered">
                     <p class="control">
-                        <input class="input" type="text" id="keyword" name="keyword" placeholder="キーワードでNRD検索" required value="{{ request.args.get('keyword', '') }}">
+                        {% if last_search_keyword %}
+                        <input class="input" type="text" id="keyword" name="keyword" placeholder="キーワードでNRD検索" required value="{{ last_search_keyword }}">
+                        {% else %}
+                        <input class="input" type="text" id="keyword" name="keyword" placeholder="キーワードでNRD検索" required>
+                        {% endif %}
                     </p>
                     <p class="control">
                         <button class="button is-info" type="submit">検索</button>

@@ -12,7 +12,12 @@ main = Blueprint('main', __name__)
 @main.route('/')
 def index():
     app.logger.info("index.html requested")
-    # 初期アクセス時には検索されていないとみなす
+    
+    # ユーザーがログインしている場合、/dashboardにリダイレクト
+    if current_user.is_authenticated:
+        return redirect(url_for('main.dashboard'))
+
+    # ログインしていない場合、通常通りindex.htmlを表示
     return render_template('index.html', nrds=[], searched=False)
 
 @main.route('/download_nrd', methods=['POST'])
@@ -61,40 +66,40 @@ def search_results():
     return render_template('index.html', nrds=nrds, searched=searched)
 
 @main.route('/dashboard')
-@main.route('/dashboard/<active_tab>')
+@main.route('/dashboard/<active_tab>', methods=['GET', 'POST'])
 @login_required
 def dashboard(active_tab='monitor'):
+    keyword = ''  # keyword変数を関数の最初で初期化
+    search_results = []  # 検索結果は空
+    watched_nrd_ids = []
+    monitored_nrds = []
     # active_tab の値に応じて処理を分岐
     if active_tab == 'monitor':
         # NRD監視の処理
         user = current_user
         monitored_nrds = user.nrds  # ユーザーの監視リストを取得
-        search_results = []  # 検索結果は空
-        watched_nrd_ids = []
     elif active_tab == 'search':
         # NRD検索＆登録の処理
-        keyword = request.args.get('keyword')
-        #session['last_search_keyword'] = keyword
-        if keyword:
-            search_results = NRD.query.filter(NRD.domain_name.contains(keyword)).limit(10).all()
-            watched_nrd_ids = [nrd.id for nrd in current_user.nrds]
+        if request.method == 'POST':
+            keyword = request.form.get('keyword')
+            session['last_search_keyword'] = keyword
         else:
-            search_results = []  # キーワードがない場合は空のリスト
-            watched_nrd_ids = []
-        monitored_nrds = []  # 監視リストは空
+            keyword = session.get('last_search_keyword', '')
+        
+        search_results = NRD.query.filter(NRD.domain_name.contains(keyword)).limit(10).all() if keyword else []
+        watched_nrd_ids = [nrd.id for nrd in current_user.nrds]
     else:
         # 不正なタブが指定された場合はデフォルト（NRD監視）を表示
         active_tab = 'monitor'
         user = current_user
         monitored_nrds = user.nrds
-        search_results = []  # 検索結果は空
-        watched_nrd_ids = []
 
     return render_template('dashboard.html', 
                            active_tab=active_tab, 
                            monitored_nrds=monitored_nrds,
                            search_results=search_results,
-                           watched_nrd_ids=watched_nrd_ids)
+                           watched_nrd_ids=watched_nrd_ids,
+                           last_search_keyword=keyword)
 
 
 @main.route('/add_to_watchlist', methods=['POST'])
