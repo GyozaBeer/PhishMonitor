@@ -13,12 +13,7 @@
                 </div>
             {% endif %}
         {% endwith %}
-
-        <!-- JavaScript変数の定義 -->
-        <script type="text/javascript">
-            var addToWatchlistUrl = "{{ url_for('main.add_to_watchlist') }}";
-        </script>
-
+        
         <div class="tabs is-centered is-boxed">
             <ul>
                 <li class="{{ 'is-active' if active_tab == 'monitor' else '' }}"><a href="{{ url_for('main.dashboard', active_tab='monitor') }}">NRD監視</a></li>
@@ -35,7 +30,7 @@
                         <tr>
                             <th>NRD名称</th>
                             <th>NRD登録日</th>
-                            <!-- その他の列が必要な場合はここに追加 -->
+                            <th>操作</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -43,7 +38,14 @@
                         <tr>
                             <td>{{ nrd.domain_name }}</td>
                             <td>{{ nrd.registration_date }}</td>
-                            <!-- その他のデータを表示 -->
+                            <td>
+                                <form action="{{ url_for('main.remove_from_watchlist') }}" method="post" onsubmit="return confirmRemoval();">
+                                    <input type="hidden" name="nrd_id" value="{{ nrd.id }}">
+                                    <input type="hidden" name="active_tab" value="{{ active_tab }}">
+                                    <input type="hidden" name="keyword" value="{{ request.args.get('keyword', '') }}">
+                                    <button type="submit" class="button is-small is-danger">監視対象除外</button>
+                                </form>
+                            </td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -55,7 +57,7 @@
                 <!-- キーワード検索フォーム -->
                 <form action="{{ url_for('main.dashboard', active_tab='search') }}" method="get" class="field has-addons has-addons-centered">
                     <p class="control">
-                        <input class="input" type="text" id="keyword" name="keyword" placeholder="キーワードでNRD検索" required>
+                        <input class="input" type="text" id="keyword" name="keyword" placeholder="キーワードでNRD検索" required value="{{ request.args.get('keyword', '') }}">
                     </p>
                     <p class="control">
                         <button class="button is-info" type="submit">検索</button>
@@ -80,11 +82,23 @@
                                     <td>{{ nrd.domain_name }}</td>
                                     <td>{{ nrd.registration_date }}</td>
                                     <td>
-                                        <form action="{{ url_for('main.add_to_watchlist') }}" method="post">
+                                        {% if nrd.id in watched_nrd_ids %}
+                                        <form action="{{ url_for('main.remove_from_watchlist') }}" method="post" style="display: inline;" onsubmit="return confirmRemoval();">
                                             <input type="hidden" name="nrd_id" value="{{ nrd.id }}">
-                                            <button type="submit" class="button is-small is-primary">監視対象追加</button>                                 </td>                                
+                                            <input type="hidden" name="keyword" value="{{ request.args.get('keyword', '') }}">
+                                            <input type="hidden" name="active_tab" value="{{ active_tab }}">
+                                            <button type="submit" class="button is-small is-danger">監視対象除外</button>
+                                        </form>
+                                        {% else %}
+                                            <form action="{{ url_for('main.add_to_watchlist') }}" method="post">
+                                                <input type="hidden" name="nrd_id" value="{{ nrd.id }}">
+                                                <input type="hidden" name="keyword" value="{{ request.args.get('keyword', '') }}">
+                                                <button type="submit" class="button is-small is-primary">監視対象追加</button>
+                                            </form>
+                                        {% endif %}
+                                    </td>
                                 </tr>
-                                {% endfor %}                                
+                                {% endfor %}                          
                             </tbody>
                         </table>
                     {% endif %}

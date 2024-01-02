@@ -1,10 +1,11 @@
 # app/main.py
 from datetime import datetime, timedelta
 from flask import current_app as app  # appインスタンスのインポート
-from flask import Blueprint, render_template, jsonify, request, flash,redirect,url_for
+from flask import Blueprint, render_template, jsonify, request, flash,redirect,url_for,current_app,session
 from flask_login import login_required, current_user  
 from utils import nrd_downloader, db_importer
 from app.models import NRD
+from app.database import db
 
 main = Blueprint('main', __name__)
 
@@ -69,13 +70,17 @@ def dashboard(active_tab='monitor'):
         user = current_user
         monitored_nrds = user.nrds  # ユーザーの監視リストを取得
         search_results = []  # 検索結果は空
+        watched_nrd_ids = []
     elif active_tab == 'search':
         # NRD検索＆登録の処理
         keyword = request.args.get('keyword')
+        #session['last_search_keyword'] = keyword
         if keyword:
             search_results = NRD.query.filter(NRD.domain_name.contains(keyword)).limit(10).all()
+            watched_nrd_ids = [nrd.id for nrd in current_user.nrds]
         else:
             search_results = []  # キーワードがない場合は空のリスト
+            watched_nrd_ids = []
         monitored_nrds = []  # 監視リストは空
     else:
         # 不正なタブが指定された場合はデフォルト（NRD監視）を表示
@@ -83,20 +88,45 @@ def dashboard(active_tab='monitor'):
         user = current_user
         monitored_nrds = user.nrds
         search_results = []  # 検索結果は空
+        watched_nrd_ids = []
 
     return render_template('dashboard.html', 
                            active_tab=active_tab, 
                            monitored_nrds=monitored_nrds,
-                           search_results=search_results)
+                           search_results=search_results,
+                           watched_nrd_ids=watched_nrd_ids)
 
 
 @main.route('/add_to_watchlist', methods=['POST'])
 @login_required
 def add_to_watchlist():
     nrd_id = request.form.get('nrd_id')
+    keyword = request.form.get('keyword')
+    current_app.logger.info(f'Received nrd_id: {nrd_id}')
+    nrd = NRD.query.get(nrd_id)
+    
+    if nrd:
+        current_app.logger.info(f'NRD found: {nrd.domain_name} with ID {nrd.id}')
+        current_user.add_nrd_to_watchlist(nrd)
+        db.session.commit()  # データベースに変更をコミット
+        flash(f"{nrd.domain_name}を監視リストに追加しました。")
+    else:
+        current_app.logger.warning('NRD not found')
+        flash('NRDが見つかりませんでした。')
+    return redirect(url_for('main.dashboard', active_tab='search', keyword=keyword))
+
+
+@main.route('/remove_from_watchlist', methods=['POST'])
+@login_required
+def remove_from_watchlist():
+    active_tab = request.form.get('active_tab', 'monitor') # デフォルト値は'monitor'
+    app.logger.info(f'active_tab : {active_tab}')
+    nrd_id = request.form.get('nrd_id')
     nrd = NRD.query.get(nrd_id)
     if nrd:
-        current_user.add_nrd_to_watchlist(nrd)
-        return jsonify({'status': 'success', 'message': 'NRDを監視リストに追加しました。'})
+        current_user.remove_nrd_from_watchlist(nrd)
+        flash(f'{nrd.domain_name}を監視リストから除外しました。', 'info')
     else:
-        return jsonify({'status': 'error', 'message': 'NRDが見つかりませんでした。'})
+        flash('NRDが見つかりませんでした。', 'error')
+    return redirect(url_for('main.dashboard', active_tab=active_tab, keyword=request.form.get('keyword')))
+

@@ -1,14 +1,15 @@
 document.addEventListener('DOMContentLoaded', function() {
-    // NRDダウンロードボタンのイベントリスナーを設定
-    document.getElementById('downloadNrd').addEventListener('click', function() {
-        downloadNRD();
-    });
+    var downloadNrdButton = document.getElementById('downloadNrd');
+    if (downloadNrdButton) {
+        downloadNrdButton.addEventListener('click', downloadNRD);
+    }
 
-    // DB格納ボタンのイベントリスナーを設定
-    document.getElementById('storeDb').addEventListener('click', function() {
-        storeNRDInDB();
-    });
+    var storeDbButton = document.getElementById('storeDb');
+    if (storeDbButton) {
+        storeDbButton.addEventListener('click', storeNRDInDB);
+    }
 });
+
 
 function downloadNRD() {
     fetch('/download_nrd', {
@@ -54,21 +55,27 @@ function confirmLogout() {
     return confirm("ログアウトしますか？");
 }
 
-function addToWatchlist(nrdId) {
-    $.ajax({
-        url: "{{ url_for('main.add_to_watchlist_ajax') }}",
-        type: 'POST',
-        data: { nrd_id: nrdId },
-        dataType: 'json',
-        success: function(response) {
-            if (response.status == 'success') {
-                alert(response.message);  // または他の通知方法
-            } else {
-                alert(response.message);  // エラーメッセージ
-            }
-        },
-        error: function() {
-            alert('通信エラーが発生しました。');
-        }
-    });
+function confirmRemoval() {
+    return confirm("このNRDを監視リストから除外してもよろしいですか？");
 }
+
+
+
+// function addToWatchlist(nrdId) {
+//     $.ajax({
+//         url: "{{ url_for('main.add_to_watchlist_ajax') }}",
+//         type: 'POST',
+//         data: { nrd_id: nrdId },
+//         dataType: 'json',
+//         success: function(response) {
+//             if (response.status == 'success') {
+//                 alert(response.message);  // または他の通知方法
+//             } else {
+//                 alert(response.message);  // エラーメッセージ
+//             }
+//         },
+//         error: function() {
+//             alert('通信エラーが発生しました。');
+//         }
+//     });
+// }
