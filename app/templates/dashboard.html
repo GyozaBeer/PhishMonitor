@@ -1,16 +1,26 @@
 <!--dashboard.html-->
 {% extends "base.html" %}
 
-{% block content %}
+{% block page_content %}
 <section class="section">
     <div class="container">
-        
+        <!-- Flashメッセージ表示領域 -->
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <div id="flash-messages" class="notification is-info">
+                    {% for message in messages %}
+                        <p>{{ message }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
         <div class="tabs is-centered is-boxed">
             <ul>
                 <li class="{{ 'is-active' if active_tab == 'monitor' else '' }}"><a href="{{ url_for('main.dashboard', active_tab='monitor') }}">フィッシングサイト監視</a></li>
                 <li class="{{ 'is-active' if active_tab == 'search' else '' }}"><a href="{{ url_for('main.dashboard', active_tab='search') }}">ドメイン検索</a></li>
             </ul>
         </div>
+
 
         {% if active_tab == 'monitor' %}
             <!-- フィッシングサイト監視機能のコンテンツ -->

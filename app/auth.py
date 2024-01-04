@@ -25,7 +25,7 @@ def login_post():
 
     # ユーザーが存在しない場合、またはパスワードが間違っている場合
     if not user or not check_password_hash(user.password_hash, password):
-        flash('ログインに失敗しました。<br>メールアドレスまたはパスワードが間違っています。')
+        flash('ログインに失敗しました。メールアドレスまたはパスワードが間違っています。')
         return redirect(url_for('auth.login'))
 
     login_user(user, remember=remember)
@@ -53,7 +53,7 @@ def signup_post():
     db.session.commit()
 
     # サインアップ成功のフラッシュメッセージを追加
-    flash('アカウントの作成に成功しました。<br>ログインしてください。', 'success')
+    flash('アカウントの作成に成功しました。ログインしてください。', 'success')
     return redirect(url_for('auth.login'))
 
 @auth.route('/logout')

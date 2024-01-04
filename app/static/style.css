@@ -21,11 +21,11 @@
     margin-bottom: 20px; /* 下部の余白 */
 }
 
-#flash-messages {
+/* #flash-messages {
     text-align: center;
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
     z-index: 9999;
-}
+} */
