@@ -1,6 +1,14 @@
 # Dockerfile
-FROM python:3.8
+FROM python:3.12
 
+# pipのアップグレード
+RUN python -m pip install --upgrade pip
+
+# 必要なパッケージのインストール
+RUN apt-get update && \
+    apt-get install -y iputils-ping && \
+    rm -rf /var/lib/apt/lists/*
+    
 # アプリケーションディレクトリを設定
 WORKDIR /app
 

@@ -5,66 +5,82 @@
     <div class="container">
         <div class="columns is-centered">
             <div class="column is-fullwidth">
-
                 <!-- ロゴ部分 -->
                 <div class="phishmonitor-logo">
                     <h1 class="title">Phish Monitor</h1>
                 </div>
-                
-                <div>
-                    <p>フィッシングサイトの可能性があるドメインを一覧化し、死活監視します</p>
-                </div>
 
-                <div style="margin-top: 20px;">
+                <p>フィッシングサイトの可能性があるドメインを検索し、起動状態を監視します</p>
+                <div style="margin-top: 20px;">   
                     <!-- 検索フォーム -->
                     <form action="{{ url_for('main.index') }}" method="get" class="field has-addons has-addons-centered">
                         <p class="control">
-                            <input class="input" type="text" id="keyword" name="keyword" placeholder="example.co.jp" required>
+                            <input class="input" type="text" id="keyword" name="keyword" placeholder="example.co.jp" required value="{{ last_search_keyword }}">
                         </p>
                         <p class="control">
                             <button class="button is-info" type="submit">検索</button>
                         </p>
                     </form>
                 </div>
-
-                <!-- index.html内の検索フォームの下に追加 -->
-
-                <h2 class="subtitle">「{{ keyword }}」の検索結果</h2>
-                <table class="table is-fullwidth">
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>ドメイン</th>
-                            <th>WHOIS登録日</th>
-                            <th>操作</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                    {% for nrd in nrds %}
-                    <tr>
-                        <td>{{ loop.index }}</td>
-                        <td>{{ nrd.domain_name }}</td>
-                        <td>{{ nrd.registration_date }}</td>
-                        <td>
-                            <form action="{{ url_for('main.add_to_watchlist') }}" method="post">
-                                <input type="hidden" name="nrd_id" value="{{ nrd.id }}">
-                                <input type="hidden" name="keyword" value="{{ request.args.get('keyword', '') }}">
-                                <button type="submit" class="button is-small is-primary">監視対象追加</button>
-                            </form>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
-
-                <!-- 管理者用ボタン -->
-                {% if current_user.is_authenticated and current_user.is_admin %}
-                    <button id="downloadNrd" class="button is-primary">NRDダウンロード</button>
-                    <button id="storeDb" class="button is-primary">DB格納</button>
+                <!-- 検索結果 -->
+                <!--将来的には、「他のユーザに監視されているサイト」を表示したい-->
+                {% if nrds %}
+                    <h2 class="subtitle" style="margin-top: 20px;">「{{ keyword }}」の検索結果</h2>
+                    <table class="table is-fullwidth">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>ドメイン</th>
+                                <th>取得日</th>
+                                <th>サーバ起動 (ping)</th>
+                                <th>Webページ起動 (curl)</th>
+                                <th>確認時刻</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for nrd in nrds %}
+                            <tr>
+                                <td>{{ loop.index }}</td>
+                                <td>{{ nrd.domain_name }}</td>
+                                <td>{{ nrd.registration_date }}</td>
+                                <td>
+                                    <span class="icon {% if nrd.ping_status %}has-text-success{% else %}has-text-danger{% endif %}">
+                                        <i class="{% if nrd.ping_status %}fas fa-check-circle{% else %}fas fa-times-circle{% endif %}"></i>
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="icon {% if nrd.curl_status %}has-text-success{% else %}has-text-danger{% endif %}">
+                                        <i class="{% if nrd.curl_status %}fas fa-check-circle{% else %}fas fa-times-circle{% endif %}"></i>
+                                    </span>
+                                </td>
+                                
+                                
+                                <td>{{ nrd.last_checked }}</td> <!-- 最終確認時刻 -->
+                                <td>
+                                    <form action="{{ url_for('main.remove_from_watchlist') }}" method="post" onsubmit="return confirmRemoval();">
+                                        <input type="hidden" name="nrd_id" value="{{ nrd.id }}">
+                                        <input type="hidden" name="active_tab" value="{{ active_tab }}">
+                                        <input type="hidden" name="keyword" value="{{ request.args.get('keyword', '') }}">
+                                        <button type="submit" class="button is-small is-danger">監視対象除外</button>
+                                    </form>
+                                </td>
+                                <td>
+                                    <button id="updateBtn-{{ nrd.id }}" onclick="updateStatus('{{ nrd.id }}')" class="button is-small is-info">更新</button>
+                                    <span id="loading-{{ nrd.id }}" class="icon is-hidden">
+                                        <i class="fas fa-spinner fa-spin"></i>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    <!-- ログインリンク -->
+                    <p>監視対象に追加する際は<a href="/auth/login">ログイン</a>してください。</p>
+                {% else %}
+                    <h2 class="subtitle" style="margin-top: 20px;">「{{ keyword }}」の検索結果</h2>
+                    <p>ドメインが見つかりませんでした。</p>
                 {% endif %}
 
-                <!-- ログインリンク -->
-                <p>監視対象に追加する際は<a href="/auth/login">ログイン</a>してください。</p>
             </div>
         </div>
     </div>

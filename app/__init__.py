@@ -3,14 +3,17 @@ import logging
 from flask import Flask
 from flask_mail import Mail
 from flask_login import LoginManager
+from flask_migrate import Migrate
 from config import Config
 from app.database import db
 from app.models import User
 from werkzeug.security import generate_password_hash
 
 
+
 mail = Mail()
 login_manager = LoginManager()
+migrate=None
 
 def create_app():
     app = Flask(__name__)
@@ -19,6 +22,7 @@ def create_app():
 
     db.init_app(app)
     mail.init_app(app)
+    migrate=Migrate(app,db)
 
     from app.auth import auth as auth_blueprint
     from app.main import main as main_blueprint

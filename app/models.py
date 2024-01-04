@@ -39,8 +39,10 @@ class NRD(db.Model):
     domain_name = db.Column(db.String(255), nullable=False)
     registration_date = db.Column(db.DateTime, default=datetime.utcnow)
     is_active = db.Column(db.Boolean, default=True)  # 死活状況
+    is_active = db.Column(db.Boolean, default=True)  # 死活状況
     last_checked = db.Column(db.DateTime)  # 最後にチェックした日時
-    # その他のNRD関連フィールド
+    ping_status = db.Column(db.Boolean)  # pingの起動状態
+    curl_status = db.Column(db.Boolean)  # curlの起動状態
 
     def __repr__(self):
         return f"<NRD '{self.domain_name}'>"

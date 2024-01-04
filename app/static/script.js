@@ -10,6 +10,14 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
+document.addEventListener('DOMContentLoaded', function() {
+    var flashMessages = document.getElementById('flash-messages');
+    if (flashMessages) {
+        setTimeout(function() {
+            flashMessages.style.display = 'none';
+        }, 3000); // 3000ミリ秒後に非表示
+    }
+});
 
 function downloadNRD() {
     fetch('/download_nrd', {
@@ -59,6 +67,54 @@ function confirmRemoval() {
     return confirm("このNRDを監視リストから除外してもよろしいですか？");
 }
 
+function updateStatus(nrdId) {
+    var updateBtn = document.getElementById('updateBtn-' + nrdId);
+    var loadingIcon = document.getElementById('loading-' + nrdId);
+
+    updateBtn.classList.add('is-hidden');
+    loadingIcon.classList.remove('is-hidden');
+
+    // Fetch APIを使用してAJAXリクエストを送信
+    fetch('/check_status', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ nrdId: nrdId })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            // ping_statusとcurl_statusの表示を更新
+            console.log(data);
+        } else {
+            console.log(data);
+            // エラーハンドリング
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        console.log(data);
+        // エラーハンドリング
+    })
+    .finally(() => {
+        // ローディングアイコンを非表示にし、ボタンを表示
+        updateBtn.classList.remove('is-hidden');
+        loadingIcon.classList.add('is-hidden');
+        location.reload();
+    });
+
+    // AJAXリクエストを送信
+    // 例: axios.post('/api/update_status', { nrdId: nrdId })
+    // ここにリクエストの成功/失敗に応じた処理を記述
+
+    // デモのために仮のタイムアウトを設定（本番環境では実際のリクエスト処理に置き換える）
+    // setTimeout(function() {
+    //     // ローディングアイコンを非表示にし、ボタンを表示
+    //     updateBtn.classList.remove('is-hidden');
+    //     loadingIcon.classList.add('is-hidden');
+    // }, 1000); // 1秒後にローディングアイコンを非表示にする
+}
 
 
 // function addToWatchlist(nrdId) {

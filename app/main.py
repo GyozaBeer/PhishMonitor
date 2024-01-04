@@ -3,9 +3,10 @@ from datetime import datetime, timedelta
 from flask import current_app as app  # appインスタンスのインポート
 from flask import Blueprint, render_template, jsonify, request, flash,redirect,url_for,current_app,session
 from flask_login import login_required, current_user  
-from utils import nrd_downloader, db_importer
+from utils import nrd_downloader, db_importer, status_checker
 from app.models import NRD
 from app.database import db
+
 
 main = Blueprint('main', __name__)
 
@@ -27,7 +28,7 @@ def index():
         nrds = NRD.query.filter(NRD.domain_name.contains(filtered_keyword)).limit(10).all()
 
     app.logger.info("index.html requested with keyword: {}".format(filtered_keyword))
-    return render_template('index.html', nrds=nrds, keyword=keyword)
+    return render_template('index.html', nrds=nrds, keyword=keyword,last_search_keyword=keyword)
 
 @main.route('/download_nrd', methods=['POST'])
 @login_required
@@ -96,8 +97,33 @@ def dashboard(active_tab='monitor'):
         
 
         # 検索するタイミングでkeywordにフィルターをかける
-        search_results = NRD.query.filter(NRD.domain_name.contains(keyword)).limit(10).all() if keyword else []
+        filtered_keyword = filter_keyword(keyword)
+
+        if filtered_keyword:
+            # フィルタリングされたキーワードで検索
+            search_results = NRD.query.filter(NRD.domain_name.contains(filtered_keyword)).limit(10).all() if keyword else []
+
+        app.logger.info("index.html requested with keyword: {}".format(filtered_keyword))
         watched_nrd_ids = [nrd.id for nrd in current_user.nrds]
+
+    elif active_tab == 'add_domain':
+        # ドメイン追加の処理
+        if request.method == 'POST':
+            domain_name = request.form.get('domain_name')
+            if not domain_name:
+                flash('ドメイン名を入力してください。', 'error')
+                return redirect(url_for('main.dashboard', active_tab='monitor'))
+
+            new_nrd = NRD(domain_name=domain_name)  # 適切な値を設定
+            db.session.add(new_nrd)
+            db.session.commit()
+
+            # 新しいNRDをユーザーの監視リストに追加
+            current_user.add_nrd_to_watchlist(new_nrd)
+            db.session.commit()
+
+            flash(f'{new_nrd.domain_name}が監視対象に追加されました。', 'success')
+            return redirect(url_for('main.dashboard', active_tab='monitor'))
     else:
         # 不正なタブが指定された場合はデフォルト（NRD監視）を表示
         active_tab = 'monitor'
@@ -115,6 +141,7 @@ def dashboard(active_tab='monitor'):
 @main.route('/add_to_watchlist', methods=['POST'])
 @login_required
 def add_to_watchlist():
+    active_tab = request.form.get('active_tab', 'monitor') # デフォルト値は'monitor'
     nrd_id = request.form.get('nrd_id')
     keyword = request.form.get('keyword')
     current_app.logger.info(f'Received nrd_id: {nrd_id}')
@@ -128,7 +155,7 @@ def add_to_watchlist():
     else:
         current_app.logger.warning('NRD not found')
         flash('NRDが見つかりませんでした。')
-    return redirect(url_for('main.dashboard', active_tab='search', keyword=keyword))
+    return redirect(url_for('main.dashboard', active_tab=active_tab, keyword=keyword))
 
 
 @main.route('/remove_from_watchlist', methods=['POST'])
@@ -154,3 +181,27 @@ def filter_keyword(keyword):
             return seg
     return None  # 何も見つからない場合はNoneを返す
 
+@main.route('/check_status', methods=['POST'])
+@login_required
+def check_status():
+    nrd_id = request.json.get('nrdId')
+    nrd = NRD.query.get(nrd_id)
+    app.logger.info(f"privious nrd.ping_status : {nrd.ping_status}")
+    app.logger.info(f"privious nrd.curl_status : {nrd.curl_status}")
+    if not nrd:
+        return jsonify({'status': 'error', 'message': 'NRD not found'}), 404
+
+    # PingとCurlの実行
+    ping_status = status_checker.check_ping(nrd.domain_name)
+    curl_status = status_checker.check_curl(nrd.domain_name)
+
+    # 結果の保存
+    nrd.ping_status = ping_status
+    nrd.curl_status = curl_status
+    nrd.last_checked = datetime.utcnow()
+    app.logger.info(f"updated nrd.ping_status : {nrd.ping_status}")
+    app.logger.info(f"updated nrd.curl_status : {nrd.curl_status}")
+
+    db.session.commit()
+
+    return jsonify({'status': 'success', 'ping': ping_status, 'curl': curl_status})

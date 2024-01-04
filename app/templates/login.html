@@ -5,17 +5,6 @@
     <h3 class="title">Login</h3>
     <div class="box">
 
-        <!-- フラッシュメッセージの表示 -->
-        {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            {% for category, message in messages %}
-                <div class="notification {{ 'is-success' if category == 'success' else 'is-danger' }}">
-                    {{ message|safe }}
-                </div>
-            {% endfor %}
-        {% endif %}
-        {% endwith %}
-
         <form method="POST" action="/auth/login">
             <div class="field">
                 <div class="control">
@@ -37,5 +26,9 @@
             <button class="button is-block is-info is-large is-fullwidth">Login</button>
         </form>
     </div>
+        <!-- アカウント作成リンクの追加 -->
+        <p class="has-text-centered" style="margin-top: 1em;">
+            <a href="/auth/signup">アカウントを新規作成する</a>
+        </p>
 </div>
 {% endblock %}

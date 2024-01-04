@@ -1,4 +1,4 @@
-<!-- base.html -->>
+<!-- base.html -->
 <!DOCTYPE html>
 <html>
 <head>
@@ -7,6 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale-1">
     <title>PhishMonitor</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.2/css/bulma.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
@@ -29,6 +30,19 @@
                     </div>
                 </div>
             </nav>
+        </div>
+
+        <!-- Flashメッセージ表示領域 -->
+        <div class="container">
+            {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                    <div id="flash-messages" class="notification is-info">
+                        {% for message in messages %}
+                            <p>{{ message }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
         </div>
 
         <div class="hero-body">

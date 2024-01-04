@@ -1,7 +1,24 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h1 class="title">
-  Welcome, {{ name }}!
-</h1>
+<!-- 管理者用ページタイトル -->
+{% if current_user.is_authenticated and current_user.is_admin %}
+    <h1 class="title">Admin用ページ</h1>
+
+    <div>
+        <button id="downloadNrd" class="button is-primary is-large has-shadow">NRDダウンロード</button>
+    </div>
+    <div>
+        <button id="storeDb" class="button is-primary is-large has-shadow">DB格納</button>
+    </div>
+
+<!-- 一般ユーザー用ページタイトル -->
+{% else %}
+    <h1 class="title">アカウント情報更新ページ</h1>
+
+    <p>ユーザ名：{{ name }}</p>
+    <p>パスワードを変更する（作成中）</p>
+    <p>アカウントを削除する（作成中）</p>
+{% endif %}
+
 {% endblock %}

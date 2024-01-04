@@ -1,28 +1,19 @@
+<!--dashboard.html-->
 {% extends "base.html" %}
 
 {% block content %}
 <section class="section">
     <div class="container">
-        <!-- Flashメッセージ表示領域 -->
-        {% with messages = get_flashed_messages() %}
-            {% if messages %}
-                <div class="notification is-info">
-                    {% for message in messages %}
-                        <p>{{ message }}</p>
-                    {% endfor %}
-                </div>
-            {% endif %}
-        {% endwith %}
         
         <div class="tabs is-centered is-boxed">
             <ul>
-                <li class="{{ 'is-active' if active_tab == 'monitor' else '' }}"><a href="{{ url_for('main.dashboard', active_tab='monitor') }}">NRD監視</a></li>
-                <li class="{{ 'is-active' if active_tab == 'search' else '' }}"><a href="{{ url_for('main.dashboard', active_tab='search') }}">NRD検索＆登録</a></li>
+                <li class="{{ 'is-active' if active_tab == 'monitor' else '' }}"><a href="{{ url_for('main.dashboard', active_tab='monitor') }}">フィッシングサイト監視</a></li>
+                <li class="{{ 'is-active' if active_tab == 'search' else '' }}"><a href="{{ url_for('main.dashboard', active_tab='search') }}">ドメイン検索</a></li>
             </ul>
         </div>
 
         {% if active_tab == 'monitor' %}
-            <!-- NRD監視機能のコンテンツ -->
+            <!-- フィッシングサイト監視機能のコンテンツ -->
             <div>
                 <h2 class="subtitle">監視リスト</h2>
                 <table class="table is-fullwidth">
@@ -30,8 +21,12 @@
                         <tr>
                             <th>#</th>
                             <th>ドメイン</th>
-                            <th>WHOIS登録日</th>
+                            <th>取得日</th>
+                            <th>サーバ起動 (ping)</th>
+                            <th>Webページ起動 (curl)</th>
+                            <th>確認時刻</th>
                             <th>操作</th>
+                            <th>更新</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -41,6 +36,19 @@
                             <td>{{ nrd.domain_name }}</td>
                             <td>{{ nrd.registration_date }}</td>
                             <td>
+                                <span class="icon {% if nrd.ping_status %}has-text-success{% else %}has-text-danger{% endif %}">
+                                    <i class="{% if nrd.ping_status %}fas fa-check-circle{% else %}fas fa-times-circle{% endif %}"></i>
+                                </span>
+                            </td>
+                            <td>
+                                <span class="icon {% if nrd.curl_status %}has-text-success{% else %}has-text-danger{% endif %}">
+                                    <i class="{% if nrd.curl_status %}fas fa-check-circle{% else %}fas fa-times-circle{% endif %}"></i>
+                                </span>
+                            </td>
+                            
+                            
+                            <td>{{ nrd.last_checked }}</td> <!-- 最終確認時刻 -->
+                            <td>
                                 <form action="{{ url_for('main.remove_from_watchlist') }}" method="post" onsubmit="return confirmRemoval();">
                                     <input type="hidden" name="nrd_id" value="{{ nrd.id }}">
                                     <input type="hidden" name="active_tab" value="{{ active_tab }}">
@@ -48,28 +56,40 @@
                                     <button type="submit" class="button is-small is-danger">監視対象除外</button>
                                 </form>
                             </td>
+                            <td>
+                                <button id="updateBtn-{{ nrd.id }}" onclick="updateStatus('{{ nrd.id }}')" class="button is-small is-info">更新</button>
+                                <span id="loading-{{ nrd.id }}" class="icon is-hidden">
+                                    <i class="fas fa-spinner fa-spin"></i>
+                            </td>
                         </tr>
                         {% endfor %}
                     </tbody>
                 </table>
+                <div class="add-domain-form">
+                    <h2 class="subtitle">直接ドメインを追加する</h2>
+                    <form action="/dashboard/add_domain" method="post">
+                        <input type="text" name="domain_name" placeholder="ドメイン名を入力">
+                        <button type="submit" class="button is-primary">ドメイン追加</button>
+                    </form>
+                </div>
             </div>
             <div>
                 {% if monitored_nrds %}
                     <!-- none -->
                 {% else %}
-                    <p><a href="{{ url_for('main.dashboard', active_tab='search') }}">NRD検索＆登録</a>してください。</p>
+                    <p style="margin-top: 20px;"><a href="{{ url_for('main.dashboard', active_tab='search') }}">ドメイン検索</a>してください。</p>
                 {% endif %}
             </div>
         {% elif active_tab == 'search' %}
-            <!-- NRD検索＆登録機能のコンテンツ -->
+            <!-- 検索＆登録機能のコンテンツ -->
             <div>
                 <!-- キーワード検索フォーム -->
                 <form action="{{ url_for('main.dashboard', active_tab='search') }}" method="post" class="field has-addons has-addons-centered">
                     <p class="control">
                         {% if last_search_keyword %}
-                        <input class="input" type="text" id="keyword" name="keyword" placeholder="キーワードでNRD検索" required value="{{ last_search_keyword }}">
+                        <input class="input" type="text" id="keyword" name="keyword" placeholder="example.co.jp" required value="{{ last_search_keyword }}">
                         {% else %}
-                        <input class="input" type="text" id="keyword" name="keyword" placeholder="キーワードでNRD検索" required>
+                        <input class="input" type="text" id="keyword" name="keyword" placeholder="example.co.jp" required>
                         {% endif %}
                     </p>
                     <p class="control">
@@ -80,7 +100,7 @@
                 <!-- 検索結果リスト -->
                 <div id="search-results">
                     {% if search_results %}
-                        <h2 class="subtitle">検索結果</h2>
+                        <h2 class="subtitle">「{{ last_search_keyword }}」の検索結果</h2>
                         <table class="table is-fullwidth">
                             <thead>
                                 <tr>
@@ -116,6 +136,8 @@
                                 {% endfor %}                          
                             </tbody>
                         </table>
+                        {% else %}
+                            <p>ドメインが見つかりませんでした。</p>
                     {% endif %}
                 </div>
             </div>
