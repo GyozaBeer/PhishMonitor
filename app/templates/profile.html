@@ -1,24 +1,30 @@
 {% extends "base.html" %}
 
-{% block content %}
-<!-- 管理者用ページタイトル -->
+{% block page_content %}
+
 {% if current_user.is_authenticated and current_user.is_admin %}
     <h1 class="title">Admin用ページ</h1>
 
-    <div>
-        <button id="downloadNrd" class="button is-primary is-large has-shadow">NRDダウンロード</button>
-    </div>
-    <div>
-        <button id="storeDb" class="button is-primary is-large has-shadow">DB格納</button>
-    </div>
+    <!-- CSRFトークンのための隠しフィールドを含める -->
+    <form method="post">
+        {{ form.hidden_tag() }}
+        <div>
+            <button id="downloadNrd" class="button is-primary is-large has-shadow">NRD（フィッシングサイト候補DB）ダウンロード</button>
+        </div>
+        <div>
+            <button id="storeDb" class="button is-primary is-large has-shadow">DB格納</button>
+        </div>
+    </form>
 
 <!-- 一般ユーザー用ページタイトル -->
 {% else %}
     <h1 class="title">アカウント情報更新ページ</h1>
 
-    <p>ユーザ名：{{ name }}</p>
-    <p>パスワードを変更する（作成中）</p>
-    <p>アカウントを削除する（作成中）</p>
+    <!-- CSRFトークンのための隠しフィールドを含める -->
+    <form method="post">
+        {{ form.hidden_tag() }}
+        <p>ユーザ名：{{ current_user.username }}</p>
+        <!-- パスワード変更フォームやアカウント削除フォームなど -->
+    </form>
 {% endif %}
-
 {% endblock %}

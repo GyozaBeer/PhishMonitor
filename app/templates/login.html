@@ -5,7 +5,7 @@
     <!-- Flashメッセージ表示領域 -->
     {% with messages = get_flashed_messages() %}
         {% if messages %}
-            <div id="flash-messages" class="notification is-danger">
+            <div id="flash-messages" class="notification is-info">
                 {% for message in messages %}
                     <p>{{ message }}</p>
                 {% endfor %}
@@ -16,6 +16,7 @@
     <div class="box">
 
         <form method="POST" action="/auth/login">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">  
             <div class="field">
                 <div class="control">
                     <input class="input is-large" type="email" name="email" placeholder="Your Email" autofocus="">

@@ -7,9 +7,15 @@ from utils import nrd_downloader, db_importer, status_checker
 from app.models import NRD
 from app.database import db
 from flask import jsonify
-
+from flask_wtf import FlaskForm
+from wtforms import StringField, SubmitField
+from wtforms.validators import DataRequired
 
 main = Blueprint('main', __name__)
+
+class ProfileForm(FlaskForm):
+    username = StringField('Username', validators=[DataRequired()])
+    submit = SubmitField('Update')
 
 def filter_keyword(keyword):
     excluded_keywords = {'www', 'co', 'jp', 'com', 'net', 'org'}  # 除外するキーワード
@@ -67,10 +73,19 @@ def store_db():
     else:
         return jsonify({"status": "error"}), 500
 
-@main.route('/profile')
+@main.route('/profile', methods=['GET', 'POST'])
 @login_required
 def profile():
-    return render_template('profile.html', name=current_user.username)
+    form = ProfileForm()
+    if form.validate_on_submit():
+        # フォームのデータでユーザー情報を更新
+        current_user.username = form.username.data
+        # データベースに変更をコミット
+        db.session.commit()
+        flash('Your profile has been updated.')
+        return redirect(url_for('profile'))
+
+    return render_template('profile.html', title='Edit Profile', form=form)
 
 @main.route('/search_results', methods=['GET'])
 def search_results():
@@ -196,9 +211,6 @@ def add_to_watchlist():
     else:
         current_app.logger.warning('NRD not found')
         return jsonify({'status': 'error', 'message': 'ドメインが見つかりませんでした。'}), 404
-
-
-
 
 @main.route('/remove_from_watchlist', methods=['POST'])
 @login_required

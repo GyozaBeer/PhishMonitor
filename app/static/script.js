@@ -19,10 +19,19 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
+function redirectToLogin() {
+    window.location.href = '/auth/login'; 
+}
+
 function downloadNRD() {
+    var csrf_token = document.getElementById('csrf_token').value;
     fetch('/download_nrd', {
         method: 'POST',
-        // 必要に応じてヘッダーやボディを設定
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrf_token // CSRF トークンをヘッダーに追加
+        },
+        // ボディが必要な場合はここに JSON 形式で追加
     })
     .then(response => {
         if (!response.ok) { // ステータスコードが200番台以外の場合
@@ -44,9 +53,15 @@ function downloadNRD() {
 
 function storeNRDInDB() {
     // DB格納APIエンドポイントにリクエストを送信
+    var csrf_token = document.getElementById('csrf_token').value;
     fetch('/store_db', {
-        method: 'POST',
-    })
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrf_token // CSRF トークンをヘッダーに追加
+            },
+            // ボディが必要な場合はここに JSON 形式で追加
+        })
     .then(response => response.json())
     .then(data => {
         if (data.status === 'success') {

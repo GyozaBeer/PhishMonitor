@@ -104,6 +104,7 @@
             <div>
                 <!-- キーワード検索フォーム -->
                 <form action="{{ url_for('main.dashboard', active_tab='search') }}" method="post" class="field has-addons has-addons-centered">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">  
                     <p class="control">
                         {% if last_search_keyword %}
                         <input class="input" type="text" id="keyword" name="keyword" placeholder="example.co.jp" required value="{{ last_search_keyword }}">
