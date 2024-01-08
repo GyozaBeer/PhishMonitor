@@ -1,14 +1,13 @@
 # はじめに
-このWebアプリケーションは、フィッシングを行っている可能性のあるドメインにpingとcurl（厳密にはhttp request）を送り死活監視を行うものです。
+このWebアプリケーションは、フィッシングサイトの可能性のあるドメインにpingとcurl（厳密にはhttp request）を送り死活監視を行うものです。
 セキュリティリスクがあるため、サンドボックスなどの安全な環境で実行してください。
 また、現在開発中の状態です。
 
 # 使い方
-## 起動方法
+1. 起動方法
 git clone https://github.com/GyozaBeer/PhishMonitor.git 
 docker compose up
 
-## Webアプリケーションの使い方
 1. ドメイン検索
 最初にSing UPページからアカウントを作成してください。
 その後、ログインしてからDashboardのドメイン検索タブからキーワードを入力してください。(例 smbc,amazon.com,rakuten.co.jp など)
