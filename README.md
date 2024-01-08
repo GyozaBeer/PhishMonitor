@@ -6,7 +6,7 @@
 
 ### 1. 起動方法
 ```git clone https://github.com/GyozaBeer/PhishMonitor.git```  <br>
-```docker compose up```
+```docker-compose up```
 
 ### 2. ドメイン検索
 最初にSing UPページからアカウントを作成してください。  
