@@ -6,7 +6,7 @@
         <div class="columns is-centered">
             <div class="column is-fullwidth">
                 <!-- Flashメッセージ表示領域 -->
-                {% with messages = get_flashed_messages() %}
+                <!-- {% with messages = get_flashed_messages() %}
                     {% if messages %}
                         <div id="flash-messages" class="notification is-info">
                             {% for message in messages %}
@@ -14,7 +14,7 @@
                             {% endfor %}
                         </div>
                     {% endif %}
-               {% endwith %}
+               {% endwith %} -->
                 <!-- ロゴ部分 -->
                 <div class="phishmonitor-logo">
                     <h1 class="title">Phish Monitor</h1>
@@ -39,46 +39,47 @@
                     <table class="table is-fullwidth">
                         <thead>
                             <tr>
-                                <th>#</th>
-                                <th>ドメイン</th>
-                                <th>取得日</th>
-                                <th>サーバ起動 (ping)</th>
-                                <th>Webページ起動 (curl)</th>
-                                <th>確認時刻</th>
-                                <th>操作</th>
+                                <th class="has-text-centered">#</th>
+                                <th class="has-text-centered">ドメイン</th>
+                                <th class="has-text-centered">取得日</th>
+                                <th class="has-text-centered">サーバ起動 (ping)</th>
+                                <th class="has-text-centered">Webページ起動 (curl)</th>
+                                <th class="has-text-centered">確認時刻</th>
+                                <th class="has-text-centered">操作</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for nrd in nrds %}
                             <tr>
-                                <td>{{ loop.index }}</td>
+                                <td class="has-text-centered">{{ loop.index }}</td>
                                 <td>{{ nrd.domain_name }}</td>
-                                <td>{{ nrd.registration_date }}</td>
-                                <td>
+                                <td class="has-text-centered">{{ nrd.registration_date.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                                <td class="has-text-centered">
                                     <span class="icon {% if nrd.ping_status %}has-text-success{% else %}has-text-danger{% endif %}">
                                         <i class="{% if nrd.ping_status %}fas fa-check-circle{% else %}fas fa-times-circle{% endif %}"></i>
                                     </span>
                                 </td>
-                                <td>
+                                <td class="has-text-centered">
                                     <span class="icon {% if nrd.curl_status %}has-text-success{% else %}has-text-danger{% endif %}">
                                         <i class="{% if nrd.curl_status %}fas fa-check-circle{% else %}fas fa-times-circle{% endif %}"></i>
                                     </span>
                                 </td>
                                 
                                 
-                                <td>{{ nrd.last_checked }}</td> <!-- 最終確認時刻 -->
-                                <td>
+                                <td class="has-text-centered">
+                                    {% if nrd.last_checked %}
+                                      {{ nrd.last_checked.strftime('%Y-%m-%d %H:%M:%S') }}
+                                    {% else %}
+                                      None
+                                    {% endif %}
+                                  </td>
+                                <td class="has-text-centered">
                                     <form action="{{ url_for('main.remove_from_watchlist') }}" method="post" onsubmit="return confirmRemoval();">
                                         <input type="hidden" name="nrd_id" value="{{ nrd.id }}">
                                         <input type="hidden" name="active_tab" value="{{ active_tab }}">
                                         <input type="hidden" name="keyword" value="{{ request.args.get('keyword', '') }}">
                                         <button type="submit" class="button is-small is-danger">監視対象除外</button>
                                     </form>
-                                </td>
-                                <td>
-                                    <button id="updateBtn-{{ nrd.id }}" onclick="updateStatus('{{ nrd.id }}')" class="button is-small is-info">更新</button>
-                                    <span id="loading-{{ nrd.id }}" class="icon is-hidden">
-                                        <i class="fas fa-spinner fa-spin"></i>
                                 </td>
                             </tr>
                             {% endfor %}

@@ -6,9 +6,19 @@ from flask_login import login_required, current_user
 from utils import nrd_downloader, db_importer, status_checker
 from app.models import NRD
 from app.database import db
+from flask import jsonify
 
 
 main = Blueprint('main', __name__)
+
+def filter_keyword(keyword):
+    excluded_keywords = {'www', 'co', 'jp', 'com', 'net', 'org'}  # 除外するキーワード
+    segments = keyword.split('.')
+    # 右側から最初に一致しないセグメントを探す
+    for seg in reversed(segments):
+        if seg not in excluded_keywords:
+            return seg
+    return None  # 何も見つからない場合はNoneを返す
 
 @main.route('/')
 def index():
@@ -137,13 +147,44 @@ def dashboard(active_tab='monitor'):
                            watched_nrd_ids=watched_nrd_ids,
                            last_search_keyword=keyword)
 
+@main.route('/add_domain', methods=['POST'])
+@login_required
+def add_domain():
+    data = request.json
+    domain_name = data.get('domain_name')
+    if not domain_name:
+        flash('ドメイン名を入力してください。', 'error')
+        return redirect(url_for('main.dashboard', active_tab='monitor'))
+
+    new_nrd = NRD(domain_name=domain_name)  # 適切な値を設定
+    db.session.add(new_nrd)
+    db.session.commit()
+
+    # 新しいNRDをユーザーの監視リストに追加
+    current_user.add_nrd_to_watchlist(new_nrd)
+    db.session.commit()
+
+    flash(f'{new_nrd.domain_name}が監視対象に追加されました。', 'success')
+    return jsonify({
+        'status': 'success',
+        'message': 'ドメインを追加しました。',
+        'new_nrd': {
+            'id': new_nrd.id,
+            'domain_name': new_nrd.domain_name,
+            'registration_date': new_nrd.registration_date.strftime('%Y-%m-%d %H:%M:%S')
+        }
+    })
+
+
+
+
+
 
 @main.route('/add_to_watchlist', methods=['POST'])
 @login_required
 def add_to_watchlist():
-    active_tab = request.form.get('active_tab', 'monitor') # デフォルト値は'monitor'
-    nrd_id = request.form.get('nrd_id')
-    keyword = request.form.get('keyword')
+    data = request.json
+    nrd_id = data.get('nrdId')  # JSONリクエストからnrdIdを取得
     current_app.logger.info(f'Received nrd_id: {nrd_id}')
     nrd = NRD.query.get(nrd_id)
     
@@ -151,35 +192,26 @@ def add_to_watchlist():
         current_app.logger.info(f'NRD found: {nrd.domain_name} with ID {nrd.id}')
         current_user.add_nrd_to_watchlist(nrd)
         db.session.commit()  # データベースに変更をコミット
-        flash(f"{nrd.domain_name}を監視リストに追加しました。")
+        return jsonify({'status': 'success', 'message': f"{nrd.domain_name}を監視リストに追加しました。"})
     else:
         current_app.logger.warning('NRD not found')
-        flash('NRDが見つかりませんでした。')
-    return redirect(url_for('main.dashboard', active_tab=active_tab, keyword=keyword))
+        return jsonify({'status': 'error', 'message': 'ドメインが見つかりませんでした。'}), 404
+
+
 
 
 @main.route('/remove_from_watchlist', methods=['POST'])
 @login_required
 def remove_from_watchlist():
-    active_tab = request.form.get('active_tab', 'monitor') # デフォルト値は'monitor'
-    app.logger.info(f'active_tab : {active_tab}')
-    nrd_id = request.form.get('nrd_id')
+    nrd_id = request.json.get('nrdId')  # JSONリクエストからnrdIdを取得
     nrd = NRD.query.get(nrd_id)
     if nrd:
         current_user.remove_nrd_from_watchlist(nrd)
-        flash(f'{nrd.domain_name}を監視リストから除外しました。', 'info')
+        db.session.commit()
+        return jsonify({'status': 'success', 'message': f'{nrd.domain_name}を監視リストから除外しました。'})
     else:
-        flash('NRDが見つかりませんでした。', 'error')
-    return redirect(url_for('main.dashboard', active_tab=active_tab, keyword=request.form.get('keyword')))
+        return jsonify({'status': 'error', 'message': 'NRDが見つかりませんでした。'}), 404
 
-def filter_keyword(keyword):
-    excluded_keywords = {'www', 'co', 'jp', 'com', 'net', 'org'}  # 除外するキーワード
-    segments = keyword.split('.')
-    # 右側から最初に一致しないセグメントを探す
-    for seg in reversed(segments):
-        if seg not in excluded_keywords:
-            return seg
-    return None  # 何も見つからない場合はNoneを返す
 
 @main.route('/check_status', methods=['POST'])
 @login_required

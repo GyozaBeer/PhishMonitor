@@ -16,3 +16,4 @@ black==23.12.1
 pytest==7.4.3
 pymysql==1.1.0
 Flask-Migrate==4.0.5
+Flask-WTF==1.2.1

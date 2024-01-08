@@ -4,8 +4,9 @@
 {% block page_content %}
 <section class="section">
     <div class="container">
+        <input type="hidden" id="csrf_token" value="{{ csrf_token() }}">
         <!-- Flashメッセージ表示領域 -->
-        {% with messages = get_flashed_messages() %}
+        <!-- {% with messages = get_flashed_messages() %}
             {% if messages %}
                 <div id="flash-messages" class="notification is-info">
                     {% for message in messages %}
@@ -13,7 +14,10 @@
                     {% endfor %}
                 </div>
             {% endif %}
-        {% endwith %}
+        {% endwith %} -->
+
+        <div id="flash-messages-container"></div>
+
         <div class="tabs is-centered is-boxed">
             <ul>
                 <li class="{{ 'is-active' if active_tab == 'monitor' else '' }}"><a href="{{ url_for('main.dashboard', active_tab='monitor') }}">フィッシングサイト監視</a></li>
@@ -26,47 +30,51 @@
             <!-- フィッシングサイト監視機能のコンテンツ -->
             <div>
                 <h2 class="subtitle">監視リスト</h2>
-                <table class="table is-fullwidth">
+                <table id="table-0" class="table is-fullwidth">
                     <thead>
                         <tr>
-                            <th>#</th>
-                            <th>ドメイン</th>
-                            <th>取得日</th>
-                            <th>サーバ起動 (ping)</th>
-                            <th>Webページ起動 (curl)</th>
-                            <th>確認時刻</th>
-                            <th>操作</th>
-                            <th>更新</th>
+                            <th class="has-text-centered">#</th>
+                            <th class="has-text-centered">ドメイン</th>
+                            <th class="has-text-centered">取得日</th>
+                            <th class="has-text-centered">サーバ起動 (ping)</th>
+                            <th class="has-text-centered">Webページ起動 (curl)</th>
+                            <th class="has-text-centered">確認時刻</th>
+                            <th class="has-text-centered">操作</th>
+                            <th class="has-text-centered">更新</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for nrd in monitored_nrds %}
-                        <tr>
-                            <td>{{ loop.index }}</td>
+                        <tr id="row-{{ nrd.id }}" >
+                            <td class="has-text-centered">{{ loop.index }}</td>
                             <td>{{ nrd.domain_name }}</td>
-                            <td>{{ nrd.registration_date }}</td>
-                            <td>
+                            <td class="has-text-centered">{{ nrd.registration_date.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                            <td id="pingStatus-{{ nrd.id }}" class="has-text-centered">
                                 <span class="icon {% if nrd.ping_status %}has-text-success{% else %}has-text-danger{% endif %}">
                                     <i class="{% if nrd.ping_status %}fas fa-check-circle{% else %}fas fa-times-circle{% endif %}"></i>
                                 </span>
                             </td>
-                            <td>
+                            <td id="curlStatus-{{ nrd.id }}" class="has-text-centered">
                                 <span class="icon {% if nrd.curl_status %}has-text-success{% else %}has-text-danger{% endif %}">
                                     <i class="{% if nrd.curl_status %}fas fa-check-circle{% else %}fas fa-times-circle{% endif %}"></i>
                                 </span>
                             </td>
                             
                             
-                            <td>{{ nrd.last_checked }}</td> <!-- 最終確認時刻 -->
-                            <td>
-                                <form action="{{ url_for('main.remove_from_watchlist') }}" method="post" onsubmit="return confirmRemoval();">
+                            <td id="lastChecked-{{ nrd.id }}" class="has-text-centered">
+                                {% if nrd.last_checked %}
+                                  {{ nrd.last_checked.strftime('%Y-%m-%d %H:%M:%S') }}
+                                {% else %}
+                                  None
+                                {% endif %}
+                              </td>
+                            <td class="has-text-centered">
+                                <form id="removeForm-{{ nrd.id }}" onsubmit="return false;">
                                     <input type="hidden" name="nrd_id" value="{{ nrd.id }}">
-                                    <input type="hidden" name="active_tab" value="{{ active_tab }}">
-                                    <input type="hidden" name="keyword" value="{{ request.args.get('keyword', '') }}">
-                                    <button type="submit" class="button is-small is-danger">監視対象除外</button>
+                                    <button type="button" class="button is-small is-danger" onclick="removeFromWatchlist('{{ nrd.id }}')">監視対象除外</button>
                                 </form>
                             </td>
-                            <td>
+                            <td class="has-text-centered">
                                 <button id="updateBtn-{{ nrd.id }}" onclick="updateStatus('{{ nrd.id }}')" class="button is-small is-info">更新</button>
                                 <span id="loading-{{ nrd.id }}" class="icon is-hidden">
                                     <i class="fas fa-spinner fa-spin"></i>
@@ -77,10 +85,11 @@
                 </table>
                 <div class="add-domain-form">
                     <h2 class="subtitle">直接ドメインを追加する</h2>
-                    <form action="/dashboard/add_domain" method="post">
+                    <form id="addDomainForm" onsubmit="return false;">
                         <input type="text" name="domain_name" placeholder="ドメイン名を入力">
-                        <button type="submit" class="button is-primary">ドメイン追加</button>
+                        <button type="button" class="button is-primary" onclick="addDomain()">ドメイン追加</button>
                     </form>
+                    
                 </div>
             </div>
             <div>
@@ -114,32 +123,29 @@
                         <table class="table is-fullwidth">
                             <thead>
                                 <tr>
-                                    <th>#</th>
-                                    <th>ドメイン</th>
-                                    <th>WHOIS登録日</th>
-                                    <th>操作</th>
+                                    <th class="has-text-centered">#</th>
+                                    <th class="has-text-centered">ドメイン</th>
+                                    <th class="has-text-centered">取得日</th>
+                                    <th class="has-text-centered">操作</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for nrd in search_results %}
                                 <tr>
-                                    <td>{{ loop.index }}</td>
+                                    <td class="has-text-centered">{{ loop.index }}</td>
                                     <td>{{ nrd.domain_name }}</td>
-                                    <td>{{ nrd.registration_date }}</td>
-                                    <td>
+                                    <td class="has-text-centered">{{ nrd.registration_date.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                                    <td class="has-text-centered">
                                         {% if nrd.id in watched_nrd_ids %}
-                                        <form action="{{ url_for('main.remove_from_watchlist') }}" method="post" style="display: inline;" onsubmit="return confirmRemoval();">
+                                        <form id="removeForm-{{ nrd.id }}" onsubmit="return false;">
                                             <input type="hidden" name="nrd_id" value="{{ nrd.id }}">
-                                            <input type="hidden" name="keyword" value="{{ request.args.get('keyword', '') }}">
-                                            <input type="hidden" name="active_tab" value="{{ active_tab }}">
-                                            <button type="submit" class="button is-small is-danger">監視対象除外</button>
+                                            <button type="button" class="button is-small is-danger" onclick="removeFromWatchlistSearch('{{ nrd.id }}')">監視対象除外</button>
                                         </form>
                                         {% else %}
-                                            <form action="{{ url_for('main.add_to_watchlist') }}" method="post">
-                                                <input type="hidden" name="nrd_id" value="{{ nrd.id }}">
-                                                <input type="hidden" name="keyword" value="{{ request.args.get('keyword', '') }}">
-                                                <button type="submit" class="button is-small is-primary">監視対象追加</button>
-                                            </form>
+                                        <form id="addToWatchlistForm-{{ nrd.id }}" onsubmit="return false;">
+                                            <input type="hidden" name="nrd_id" value="{{ nrd.id }}">
+                                            <button type="button" class="button is-small is-primary" onclick="addToWatchlistSearch('{{ nrd.id }}')">監視対象追加</button>
+                                        </form>                                        
                                         {% endif %}
                                     </td>
                                 </tr>
