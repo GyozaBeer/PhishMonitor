@@ -5,7 +5,7 @@
 # 使い方
 
 ## 1. 起動方法
-git clone https://github.com/GyozaBeer/PhishMonitor.git
+git clone https://github.com/GyozaBeer/PhishMonitor.git　　
 docker compose up
 
 ## 2. ドメイン検索
