@@ -1,12 +1,12 @@
 # はじめに
 このWebアプリは、フィッシングサイトの可能性のあるドメインの死活監視を行うものです。  
-セキュリティリスクがあるため、サンドボックスなどの安全な環境で実行してください。
+セキュリティリスクがあるため、専用の仮想環境やサンドボックスなどの安全な環境で実行してください。
 
 # 使い方
 
 ## 1. 起動方法
-git clone https://github.com/GyozaBeer/PhishMonitor.git  
-docker compose up
+```git clone https://github.com/GyozaBeer/PhishMonitor.git```
+```docker compose up```
 
 ## 2. ドメイン検索
 最初にSing UPページからアカウントを作成してください。  
